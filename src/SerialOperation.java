@@ -27,9 +27,12 @@ public class SerialOperation implements SerialPortEventListener {
                 //打开串口
                 try
                 {
-                    serialPort = (SerialPort)portId.open(Object.class.getSimpleName(),1000);
+                    serialPort = (SerialPort)portId.open(Object.class.getSimpleName(), 1000);
 
                     serialPort.addEventListener(this);
+
+                    serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+
 
                 } catch (PortInUseException e) {
                     e.printStackTrace();
