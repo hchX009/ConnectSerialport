@@ -1,15 +1,12 @@
-import gnu.io.CommPortIdentifier;
-import gnu.io.PortInUseException;
-import gnu.io.SerialPort;
+import gnu.io.*;
 
 import java.util.Enumeration;
+import java.util.TooManyListenersException;
 
-public class SerialOperation
-{
+public class SerialOperation implements SerialPortEventListener {
     //使用了RXTX，RXTX是一个提供串口和并口通信的开源java类库
     //定义通讯端口管理类postId
-    private CommPortIdentifier portId;
-    //定义通讯端口管理类列表postList
+    private CommPortIdentifier portId;    //定义通讯端口管理类列表postList
     //Enumeration接口中有一些方法可以枚举对象元素里的元素
     private Enumeration<CommPortIdentifier> portList;
     //RS232串口
@@ -31,10 +28,20 @@ public class SerialOperation
                 try
                 {
                     serialPort = (SerialPort)portId.open(Object.class.getSimpleName(),1000);
+
+                    serialPort.addEventListener(this);
+
                 } catch (PortInUseException e) {
+                    e.printStackTrace();
+                } catch (TooManyListenersException e) {
                     e.printStackTrace();
                 }
             }
         }
+    }
+
+    @Override
+    public void serialEvent(SerialPortEvent serialPortEvent) {
+
     }
 }
