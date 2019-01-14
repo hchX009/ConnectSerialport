@@ -3,8 +3,8 @@ import gnu.io.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Date;
 import java.util.Enumeration;
-import java.util.TooManyListenersException;
 
 public class SerialOperation implements SerialPortEventListener {
     //使用了RXTX，RXTX是一个提供串口和并口通信的开源java类库
@@ -13,51 +13,42 @@ public class SerialOperation implements SerialPortEventListener {
     //Enumeration接口中有一些方法可以枚举对象元素里的元素
     private Enumeration<CommPortIdentifier> portList;
     //RS232串口
-    private SerialPort[] serialPort;
+    private SerialPort serialPort;
     //输入输出流
     private InputStream inputStream;
     private OutputStream outputStream;
-    //定义串口数量
-    private int serialNum = 0;
 
     //初始化串口函数
     public void seralportInit() {
         //获取系统所有通讯端口
         portList = CommPortIdentifier.getPortIdentifiers();
-        Enumeration<CommPortIdentifier> portListcount = CommPortIdentifier.getPortIdentifiers();
-        while (portListcount.hasMoreElements()) {
-            serialNum++;
-            portListcount.nextElement();
-        }
-        //定义串口数组
-        serialPort = new SerialPort[serialNum];
-        //System.out.println(serialNum);
-        for (int i = 0; i < serialNum; i++)
-        {
+        while (portList.hasMoreElements()) {
             portId = portList.nextElement();
             //判断是否为端口
-            if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL)
-            {
+            if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
                 System.out.println("找到串口"+portId.getName());
                 //打开串口
-                try
-                {
+                try {
                     //打开串口
-                    serialPort[i] = (SerialPort)portId.open(Object.class.getSimpleName(), 1000);
-                    //设置串口可监听
-                    serialPort[i].addEventListener(this);
+                    serialPort = (SerialPort)portId.open(Object.class.getSimpleName(), 1000);
+                    //设置串口数据时间有效
+                    serialPort.notifyOnDataAvailable(true);
                     //设置串口通讯参数：波特率，数据位，停止位，校验方式
-                    serialPort[i].setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-                    //获取输出流
-                    outputStream = serialPort[i].getOutputStream();
-
+                    serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+                    //发送协议，判断是否为所需串口
+                    writeSerialPort("test");
+                    if(!readSerialPort().equals("testtoo")){
+                        closeSerialPort(false);
+                    } else {
+                        //设置串口可监听
+                        //serialPort.addEventListener(this);
+                        //break;
+                    }
                 } catch (PortInUseException e) {
                     e.printStackTrace();
-                } catch (TooManyListenersException e) {
+                } /*catch (TooManyListenersException e) {
                     e.printStackTrace();
-                } catch (UnsupportedCommOperationException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
+                }*/ catch (UnsupportedCommOperationException e) {
                     e.printStackTrace();
                 }
             }
@@ -85,13 +76,64 @@ public class SerialOperation implements SerialPortEventListener {
         }
     }
 
-    //读取串口返回信息，判断是否为所需的串口
-    private void readSerialPort() {
+    //向串口输出信息
+    public void writeSerialPort(String out){
+        try {
+            //获取输出流
+            outputStream = serialPort.getOutputStream();
+            outputStream.write(0xff);
+            outputStream.flush();
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //读取串口返回信息
+    public String readSerialPort(){
+        String in = new String();
         byte[] readBuffer = new byte[1024];
+        try {
+            //获取输入流
+            inputStream = serialPort.getInputStream();
+            int len = 0;
+            while ((len = inputStream.read(readBuffer)) != -1) {
+                System.out.println("串口" + portId + "读取到：" + new String(readBuffer, 0, len).trim() + new Date());
+                in = new String(readBuffer, 0, len).trim();
+                break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return in;
     }
 
     //关闭串口
-    private void closeSerialPort() {
-
+    public void closeSerialPort(boolean flag) {
+        if(serialPort != null) {
+            serialPort.notifyOnDataAvailable(false);
+            if (flag) {
+                serialPort.removeEventListener();
+            }
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                    inputStream = null;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (outputStream != null) {
+                try {
+                    outputStream.close();
+                    outputStream = null;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            serialPort.close();
+            serialPort = null;
+            System.out.println(portId.getName()+"串口已关闭");
+        }
     }
 }
