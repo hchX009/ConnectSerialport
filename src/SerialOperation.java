@@ -29,6 +29,7 @@ public class SerialOperation implements SerialPortEventListener {
             //判断是否为端口
             if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
                 System.out.println("找到串口" + portId.getName());
+                //if(!portId.getName().equals("COM5")) continue;
                 //打开串口
                 try {
                     //打开串口
@@ -37,9 +38,11 @@ public class SerialOperation implements SerialPortEventListener {
                     serialPort.notifyOnDataAvailable(true);
                     //设置串口通讯参数：波特率，数据位，停止位，校验方式
                     serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-                    //发送协议，判断是否为所需串口，
-                    writeSerialPort("test");
-                    if(!readSerialPort().equals("test")){
+                    //发送协议，判断是否为所需串口
+
+                    String protocolStr = "protocol";
+
+                    if(!sendSerialProtocol(protocolStr)){
                         System.out.println("串口" + portId.getName() + "不是要找的串口");
                         closeSerialPort(false);
                         continue;
@@ -83,6 +86,38 @@ public class SerialOperation implements SerialPortEventListener {
         }
     }
 
+    // 发送串口协议，识别是否为正确设备
+    public boolean sendSerialProtocol(String protocolStr){
+        StringBuilder txBuf = new StringBuilder();
+        boolean fristFlag = true;
+        char fid = 0xAA, command = 0x03, eid = 0x55, cs = 0;
+        char length = (char)protocolStr.length();
+        txBuf.append(fid);
+        txBuf.append(command);
+        txBuf.append(length);
+        txBuf.append(protocolStr);
+        char[] txChars = txBuf.toString().toCharArray();
+        for(char txChar:txChars){
+            if (fristFlag){
+                fristFlag = false;
+                continue;
+            }
+            cs += txChar;
+        }
+        txBuf.append(((char)(0x00ff&cs)));
+        txBuf.append(eid);
+        //System.out.println(txBuf.toString());
+        writeSerialPort(txBuf.toString());
+        try {
+            Thread.sleep(500);     //等待500ms串口发送
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        String backtext = readSerialPort();
+        if(backtext.length() > 3+protocolStr.length() && backtext.substring(3, 3+protocolStr.length()).equals(protocolStr)) return true;
+        else return false;
+    }
+
     //向串口输出信息
     public boolean writeSerialPort(String out){
         byte[] wirtebuffer = out.getBytes();
@@ -106,6 +141,9 @@ public class SerialOperation implements SerialPortEventListener {
             //获取输入流
             inputStream = serialPort.getInputStream();
             int len = inputStream.read(readBuffer);
+            //for(int i = 0; i < len; i++)
+            //    System.out.printf("%d ", readBuffer[i]);
+            //System.out.println();
             in = new String(readBuffer, 0, len).trim();
             System.out.println("串口" + portId.getName() + "读取到:" + in + " 长度为:" + len);
         } catch (IOException e) {
