@@ -1,5 +1,5 @@
 # connect_serialport
-这是一个使用Java编写得串口通讯读写程序
+这是一个使用Java编写的串口通讯读写程序
 
 使用了RXTX串口通讯类库，JDK最好使用Java SE 8(我也不知道为啥用11会有玄学bug)
 
