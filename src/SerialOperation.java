@@ -7,6 +7,9 @@ import java.util.Enumeration;
 import java.util.TooManyListenersException;
 
 public class SerialOperation implements SerialPortEventListener {
+    //收到的buf最大长度
+    private static final int BUF_SIZE = 1024;
+
     //使用了RXTX，RXTX是一个提供串口和并口通信的开源java类库
     //定义通讯端口管理类postId
     private CommPortIdentifier portId;    //定义通讯端口管理类列表postList
@@ -17,11 +20,11 @@ public class SerialOperation implements SerialPortEventListener {
     //输入输出流
     private InputStream inputStream;
     private OutputStream outputStream;
-    //接收到的文本
-    private String text;
+    //接收到的数据对象
+    private DealData Data = new DealData();
 
     //初始化串口函数
-    public void seralportInit() {
+    public void serialportInit() {
         //获取系统所有通讯端口
         portList = CommPortIdentifier.getPortIdentifiers();
         while (portList.hasMoreElements()) {
@@ -79,7 +82,10 @@ public class SerialOperation implements SerialPortEventListener {
             case SerialPortEvent.OUTPUT_BUFFER_EMPTY:  //输出缓存区已清空
                 break;
             case SerialPortEvent.DATA_AVAILABLE:    //有数据到达
-                readSerialPort();
+                int[] datas = readSerialPort16();
+                //for(int data:datas) System.out.printf("%x ",data);
+                //System.out.println();
+                Data.getFormatData(datas);
                 break;
             default:
                 break;
@@ -129,23 +135,44 @@ public class SerialOperation implements SerialPortEventListener {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("向串口" + portId.getName() + "发送信息:" + out + " 完毕");
+        //System.out.println("向串口" + portId.getName() + "发送信息:" + out + " 完毕");
         return true;
     }
 
     //读取串口返回信息
     public String readSerialPort(){
         String in = "";
-        byte[] readBuffer = new byte[1024];
+        byte[] readBuffer = new byte[BUF_SIZE];
         try {
             //获取输入流
             inputStream = serialPort.getInputStream();
             int len = inputStream.read(readBuffer);
             //for(int i = 0; i < len; i++)
-            //    System.out.printf("%d ", readBuffer[i]);
+            //    System.out.printf("%x ", 0x0ff&readBuffer[i]);
             //System.out.println();
             in = new String(readBuffer, 0, len).trim();
-            System.out.println("串口" + portId.getName() + "读取到:" + in + " 长度为:" + len);
+            //System.out.println("串口" + portId.getName() + "读取到:" + in + " 长度为:" + len);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return in;
+    }
+
+    //读取串口返回信息(16进制数组)
+    public int[] readSerialPort16(){
+        int[] in = {};
+        byte[] readBuffer = new byte[BUF_SIZE];
+        try {
+            //获取输入流
+            inputStream = serialPort.getInputStream();
+            int len = inputStream.read(readBuffer);
+            in = new int[len];
+            for(int i = 0; i < len; i++) {
+                in[i] = 0x0ff & readBuffer[i];
+                //System.out.printf("%x ", 0x0ff & readBuffer[i]);
+            }
+            //System.out.println();
+            //System.out.println("串口" + portId.getName() + "读取到:" + in + " 长度为:" + len);
         } catch (IOException e) {
             e.printStackTrace();
         }
