@@ -10,5 +10,5 @@ RXTX下载地址：http://rxtx.qbang.org/wiki/index.php/Download
 /src文件夹中包含了该程序源码保存在  
 + Main.java为程序主函数  
 + SerialOperation.java中定义了串口初始化方法，串口读写方法和串口关闭方法  
-+ DealData.java中定义了处理日期的方法 
++ DealData.java中定义了处理日期的方法  
 /out文件夹中是代码编译后的文件
