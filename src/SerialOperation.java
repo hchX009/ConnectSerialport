@@ -1,3 +1,5 @@
+package src;
+
 import gnu.io.*;
 
 import java.io.IOException;
@@ -120,8 +122,7 @@ public class SerialOperation implements SerialPortEventListener {
             e.printStackTrace();
         }
         String backtext = readSerialPort();
-        if(backtext.length() > 3+protocolStr.length() && backtext.substring(3, 3+protocolStr.length()).equals(protocolStr)) return true;
-        else return false;
+        return backtext.length() > 3 + protocolStr.length() && backtext.substring(3, 3 + protocolStr.length()).equals(protocolStr);
     }
 
     //向串口输出信息
