@@ -8,7 +8,7 @@ RXTX下载地址：http://rxtx.qbang.org/wiki/index.php/Download
 
 /lib文件夹中包含了RXTXcomm.jar类库(那我上面放下载地址干啥……)  
 /src文件夹中包含了该程序源码保存在  
-+ Main.class为程序主函数  
-+ SerialOperation.class中定义了串口初始化方法，串口读写方法和串口关闭方法  
-+ DealData.class中定义了处理日期的方法 
++ Main.java为程序主函数  
++ SerialOperation.java中定义了串口初始化方法，串口读写方法和串口关闭方法  
++ DealData.java中定义了处理日期的方法 
 /out文件夹中是代码编译后的文件
