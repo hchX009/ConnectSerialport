@@ -1,4 +1,4 @@
-# connect_serialport
+# ConnectSerialport
 
 这是一个使用Java编写的串口通讯读写程序，为了实现单片机硬件和上位机之间的串口通讯功能。 
 
